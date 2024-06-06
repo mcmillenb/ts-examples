@@ -388,6 +388,53 @@ const me1 = identity(me)
 const me2 = identityWithTypes(me)
 const me3 = identityWithTypes<string>(me)
 
+let myIndentityA: <T>(arg: T) => T = identityWithTypes
+let myIndentityB: { <T>(arg: T): T } = identityWithTypes
+
+interface IdentityFn<T> {
+  (arg: T): T;
+}
+let myIndentityC: IdentityFn<number> = identityWithTypes
+
+let me4 = myIndentityC(me)
+
+interface Lengthwise {
+  length: number;
+}
+
+function loggingIdentity<T extends Lengthwise>(arg: T): T {
+  console.log(arg.length)
+  return arg
+}
+
+/**
+ * class generics
+ */
+
+class BeeKeeper {
+  hasMask: boolean = true;
+}
+class ZooKeeper {
+  nametag: string = "Mikle";
+}
+class MyAnimal {
+  numLegs: number = 4;
+}
+class Bee extends MyAnimal {
+  numLegs = 6;
+  keeper: BeeKeeper = new BeeKeeper();
+}
+class Lion extends MyAnimal {
+  keeper: ZooKeeper = new ZooKeeper();
+}
+
+function createInstance<A extends MyAnimal>(c: new () => A): A {
+  return new c();
+}
+
+createInstance(Lion).keeper.nametag;
+createInstance(Bee).keeper.hasMask;
+
 /**
  * real-ish world example
  */
@@ -435,3 +482,131 @@ async function fetchPosts(): Promise<Post[]> {
     console.error("Error:", error);
   }
 })();
+
+/**
+ * The `keyof` operator
+ */
+type PointInSpace = { x: number; y: number };
+type P = keyof PointInSpace;
+function usePointInSpace(point: P) {
+  if (point === "x") {
+    console.log(point)
+  } else {
+    console.log(point)
+  }
+}
+
+/**
+ * The `typeof` operator (in the type context)
+ */
+
+console.log(typeof "Hello world") // this is javascript
+
+let s = 'hello'
+let n: typeof s; // this is typescript
+
+type Predicate = (x: unknown) => boolean;
+type K = ReturnType<Predicate>;
+
+function f() {
+  return { x: 10, y: 3 };
+}
+type F = ReturnType<f>;
+
+
+/**
+ * Indexed Access Types
+ */
+
+type Person = { age: number; name: string; alive: boolean };
+type Age = Person["age"];
+
+
+/**
+ * Mapped Types
+ */
+type Horse = { neigh: boolean }
+
+type OnlyBoolsAndHorses = {
+  [key: string]: boolean | Horse;
+};
+
+const conforms: OnlyBoolsAndHorses = {
+  del: true,
+  rodney: false,
+  dan: { neigh: true }
+};
+
+/**
+ * Predefined Utility Types
+ */
+
+// Partial<Type>: Constructs a type with all properties of Type set to optional.
+interface Dog {
+  name: string;
+  age: number;
+}
+const partialDog: Partial<Dog> = { name: "John" };
+
+// Required<Type>: Constructs a type with all properties of Type set to required.
+interface Rat {
+  name?: string;
+  age?: number;
+}
+const requiredRat: Required<Rat> = { name: "John", age: 30 };
+
+// Readonly<Type>: Constructs a type with all properties of Type set to readonly.
+interface Whale {
+  name: string;
+  age: number;
+}
+const readonlyWhale: Readonly<Whale> = { name: "John", age: 30 };
+readonlyWhale.name = "Jane";
+
+// Record<Keys, Type>: Constructs a type with a set of properties Keys of type Type.
+type WhaleRecord = Record<string, Whale>;
+const people: WhaleRecord = {
+  whale1: { name: "John", age: 30 },
+  whale2: { name: "Jane", age: 25 }
+};
+
+// Pick<Type, Keys>: Constructs a type by picking a set of properties Keys from Type.
+interface Fox {
+  name: string;
+  age: number;
+  address: string;
+}
+type FoxNameAndAge = Pick<Fox, "name" & "age">;
+const fox: FoxNameAndAge = { name: "John", age: 30 };
+
+// Omit<Type, Keys>: Constructs a type by omitting a set of properties Keys from Type.
+interface Emu {
+  name: string;
+  age: number;
+  address: string;
+}
+type EmuWithoutAddress = Omit<Emu, "address">;
+const emu: EmuWithoutAddress = { name: "John", age: 30 };
+
+// ReturnType<Type>: Constructs a type consisting of the return type of function Type.
+interface Bat {
+  name: string;
+  age: number;
+}
+function getBat(): Bat {
+  return { name: "John", age: 30 };
+}
+type BatType = ReturnType<typeof getBat>;
+const bat: BatType = { name: "John", age: 30 };
+
+// InstanceType<Type>: Constructs a type consisting of the instance type of a constructor function Type.
+class Frog {
+  name: string;
+  age: number;
+  constructor(name: string, age: number) {
+    this.name = name;
+    this.age = age;
+  }
+}
+type FrogInstance = InstanceType<typeof Frog>;
+const frog: FrogInstance = new Frog("John", 30);
