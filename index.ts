@@ -55,6 +55,11 @@ charlie.isilliterate = false; // seems more helpful here
  */
 // look at ./tsconfig.json
 
+
+/**********************************************************/
+/** Everyday Types ****************************************/
+/**********************************************************/
+
 /**
  * `string`, `number`, and `boolean` are the primative types
  */
@@ -268,3 +273,165 @@ enum Direction {
   Left,
   Right,
 }
+
+/**********************************************************/
+/** Narrowing *********************************************/
+/**********************************************************/
+
+function padLeft(padding: number | string, input: string): string {
+  if (typeof padding === "number") {
+    return " ".repeat(padding) + input;
+  }
+  return padding + input;
+}
+
+/**
+ * `typeof` type guards
+ */
+function printAll(strs: string | string[] | null) {
+  if (typeof strs === "object") {
+    for (const s of strs) {
+      console.log(s);
+    }
+  } else if (typeof strs === "string") {
+    console.log(strs);
+  } else {
+    // do nothing
+  }
+}
+
+/**
+ * truthiness checking
+ */
+function multiplyAll(
+  values: number[] | undefined,
+  factor: number
+): number[] | undefined {
+  if (!values) {
+    return values;
+  } else {
+    return values.map((x) => x * factor);
+  }
+}
+
+/**
+ * equality narrowing
+ */
+function example(x: string | number, y: string | boolean) {
+  if (x === y) {
+    // We can now call any 'string' method on 'x' or 'y'.
+    x.toUpperCase();
+    y.toLowerCase();
+
+  } else {
+    console.log(x);
+    console.log(y);
+  }
+}
+
+/**
+ * type predicates
+ */
+type Fish = { swim: Function };
+type Bird = { fly: Function };
+
+const pet = {} as Fish | Bird;
+
+function isFish(pet: Fish | Bird): pet is Fish {
+  return (pet as Fish).swim !== undefined;
+}
+if (isFish(pet)) {
+  pet.swim();
+} else {
+  pet.fly();
+}
+
+/**
+ * the `never` type
+ */
+type Circle = { kind: 'circle', radius: number }
+type Square = { kind: 'square', sideLength: number }
+// type Triangle = { kind: 'triangle', sideLength: number }
+type Shape = Circle | Square // | Triangle;
+
+function getArea(shape: Shape) {
+  switch (shape.kind) {
+    case "circle":
+      return Math.PI * shape.radius ** 2;
+    case "square":
+      return shape.sideLength ** 2;
+    default:
+      const _exhaustiveCheck: never = shape;
+      return _exhaustiveCheck;
+  }
+}
+
+/**********************************************************/
+/** Generic Types *****************************************/
+/**********************************************************/
+
+/**
+ * "Hello World" of Generics
+ */
+
+function identity(arg: any) {
+  return arg;
+}
+
+function identityWithTypes<Type>(arg: Type): Type {
+  return arg
+}
+
+const me = 'me';
+
+const me1 = identity(me)
+const me2 = identityWithTypes(me)
+const me3 = identityWithTypes<string>(me)
+
+/**
+ * real-ish world example
+ */
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+interface Post {
+  id: number;
+  title: string;
+  body: string;
+  userId: number;
+}
+
+async function fetchData<T>(url: string): Promise<T> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch data from ${url}: ${response.statusText}`);
+  }
+  const data: T = await response.json();
+  return data;
+}
+
+async function fetchUsers(): Promise<User[]> {
+  const url = "https://jsonplaceholder.typicode.com/users";
+  return fetchData<User[]>(url);
+}
+
+async function fetchPosts(): Promise<Post[]> {
+  const url = "https://jsonplaceholder.typicode.com/posts";
+  return fetchData<Post[]>(url);
+}
+
+(async () => {
+  try {
+    const users = await fetchUsers();
+    console.log("Users:", users);
+
+    const posts = await fetchPosts();
+    console.log("Posts:", posts);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+})();
